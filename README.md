@@ -6,10 +6,15 @@ It will be incorporated into the existing AddaxAI streamlit repo eventually, but
 ## Installation
 
 1. Clone the repository.
+
+```bash
+git clone https://github.com/PetervanLunteren/st-depth-estimation.git
+```
+
 2. Install the dependencies:
 
 ```bash
-pip install -r requirements.txt
+pip install -r st-depth-estimation/requirements.txt
 ```
 
 ## Usage
@@ -17,7 +22,7 @@ pip install -r requirements.txt
 To run the app, use the following command:
 
 ```bash
-streamlit run app.py
+streamlit run st-depth-estimation/app.py
 ```
 
 ## Idea
@@ -46,8 +51,15 @@ In that folder there is a CSV file with all the prediciton and bbox information:
 # UI
 
 I dont really have a concrete idea of how it should look, but I believe the following should be present
-* first step is to let the user select a representative image to do the calibration
-* second step is to do the actual calibration, where the user clicks on a few objects, and inputs the known distance. E.g., this tree is 3 meters away, this bush is 10 meters away, etc. How many? I don't know. We'll have to test.
-* third step would be to run the depth anything model (https://github.com/DepthAnything/Depth-Anything-V2) over that image and get the distance map for that image. My thoughts were that we would only need to run one image, get the distance map, and use that for all other images in that deployment since the background will be static anyway. But after giving it some thought, we probabaly need to run the depth model over all images since the camera might be tied to an unstable tree that moves in the wind, hereby changes the background slightly, and hence we probabaly need to get the distance maps for each image separately.
-* fourth step would be to calculate the distances of all the bounding boxes of the animals in the other images in that deployment, so we can add it to the results. 
+1. let the user select a representative image to do the calibration. Perhaps using https://github.com/jrieke/streamlit-image-select ?
+2. run the depth anything model (https://github.com/DepthAnything/Depth-Anything-V2) over that image and get the distance map for that image. It would be nice to have the RGB image next to the coloured distance map of that image. Perhaps something like this https://huggingface.co/spaces/depth-anything/Depth-Anything-V2 ?
+
+![Alt text](assets/example.png)
+
+3. do the actual calibration, where the user clicks on a few objects, and inputs the known distance. E.g., this tree is 3 meters away, this bush is 10 meters away, etc. How many? I don't know. We'll have to test. It would be nice to be able to click on either the RGB image or the depth map if the user perfers either one, and have calibration point show up at both images. Perhaps using https://image-coordinates.streamlit.app/dynamic_update ?
+4. calculate the distances of all the bounding boxes of the animals in the other images in that deployment, so we can add it to the results. We can do different things here, like the distance of the center of the bounding box (perhaps not useful for weirdly shaped animals that dont always have a body in the center like snakes, giraffes, etc?). Maybe best to take the center of the bottom of the bbox, so that we have the distance at the ground level. This is also error prone due to grass or other object in the way.. We'll have to give it some trial and error... We can also caluclate the hight of the animal, which will give the user some information on the age group of the animal (juvenile / adult).
+
+# Closing remarks
+
+This is just an initial idea! Please don't take these to strict. In my experience it always turns out different that you would expect, so please feel free to play around and try out what feels best!
 
