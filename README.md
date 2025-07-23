@@ -47,6 +47,7 @@ In that folder there is a CSV file with all the prediciton and bbox information:
 
 I dont really have a concrete idea of how it should look, but I believe the following should be present
 * first step is to let the user select a representative image to do the calibration
-* second step is to do the actual calibration, where the user clicks on a few objects, and inputs the known distance. E.g., this tree is 3 meters away, this bush is 10 meters away, etc. 
-* third step would be to run the depth anything model (https://github.com/DepthAnything/Depth-Anything-V2) over that image and get the distance map for that image.
+* second step is to do the actual calibration, where the user clicks on a few objects, and inputs the known distance. E.g., this tree is 3 meters away, this bush is 10 meters away, etc. How many? I don't know. We'll have to test.
+* third step would be to run the depth anything model (https://github.com/DepthAnything/Depth-Anything-V2) over that image and get the distance map for that image. My thoughts were that we would only need to run one image, get the distance map, and use that for all other images in that deployment since the background will be static anyway. But after giving it some thought, we probabaly need to run the depth model over all images since the camera might be tied to an unstable tree that moves in the wind, hereby changes the background slightly, and hence we probabaly need to get the distance maps for each image separately.
 * fourth step would be to calculate the distances of all the bounding boxes of the animals in the other images in that deployment, so we can add it to the results. 
+
