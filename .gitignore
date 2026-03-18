@@ -1,3 +1,40 @@
-venv/
+# Python
 __pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+.venv/
+.conda/
+
+# Secrets
+.env
+*.env
+.env.*
+
+# Model weights
+*.pt
+*.pth
+*.bin
+.cache/
+
+# Data
+*.csv
+*.log
+test-imgs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
 .DS_Store
+Thumbs.db
+
+# AI tools
+.claude/

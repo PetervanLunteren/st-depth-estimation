@@ -2,3 +2,7 @@ streamlit
 pandas
 Pillow
 streamlit-image-coordinates
+streamlit-image-comparison
+transformers>=4.47.1
+torch
+numpy

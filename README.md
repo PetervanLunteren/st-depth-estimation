@@ -1,65 +1,132 @@
-# st-depth-estimation
-Temporary repo for the development of an depth estimation tool for AddaxAI
+# Depth Estimation Tool
 
-It will be incorporated into the existing AddaxAI streamlit repo eventually, but its easier for now to just see it as a separate tool. We'll tie it together later.
+A Streamlit web app that estimates real-world distances to animals in camera-trap images. It uses the [DepthAnything V2](https://github.com/DepthAnything/Depth-Anything-V2) AI model to generate a depth map from a single image, then lets you calibrate that depth map with known distances so every detected animal gets a distance estimate.
+
+This is a standalone development tool that will eventually be incorporated into the [AddaxAI](https://github.com/PetervanLunteren/AddaxAI) Streamlit app.
+
+![Example depth map](assets/example.png)
 
 ## Installation
 
-1. Clone the repository.
+1. Clone the repository:
 
 ```bash
 git clone https://github.com/PetervanLunteren/st-depth-estimation.git
+cd st-depth-estimation
 ```
 
 2. Install the dependencies:
 
 ```bash
-pip install -r st-depth-estimation/requirements.txt
+pip install -r requirements.txt
 ```
+
+> **Note:** PyTorch (`torch`) is required. If you need GPU support or a specific CUDA version, install PyTorch separately first following the [official instructions](https://pytorch.org/get-started/locally/), then install the remaining requirements.
 
 ## Usage
 
-To run the app, use the following command:
+Run the app:
 
 ```bash
-streamlit run st-depth-estimation/app.py
+streamlit run app.py
 ```
 
-## Idea
-The idea is that users can add an estimation of the distance from the camera to the animal. This then can provide information on the size of the animal. When users have reached this tool, they have already processed the images with AI recognition models, so the bounding box of the animals, and the prediction are known. 
+This opens the tool in your browser (typically `http://localhost:8501`).
 
-My idea was to run the depth anything model (https://github.com/DepthAnything/Depth-Anything-V2) over one image of the deployment, calibrate it a few points, and then be able to calculate the distances of each animal.
+## Input data
 
-You can find an example deployment in this repo: /test-imgs/
-In that folder there is a CSV file with all the prediciton and bbox information: /test-imgs/results_detections.csv
+The app expects:
+
+- **An image folder** (`test-imgs/` by default) containing camera-trap JPEGs.
+- **A detections CSV** (`test-imgs/results_detections.csv`) with columns for each image's detected animals, their bounding boxes, confidence scores, and metadata. This CSV is produced by an upstream AI recognition model (e.g. via AddaxAI).
 
 <details>
-<summary>example detections CSV</summary>
+<summary>Example detections CSV</summary>
 
-<br>
-
-| relative_path | label                         | confidence | bbox_left | bbox_top | bbox_right | bbox_bottom | DateTimeOriginal    | Latitude           | Longitude           |
-|---------------|-------------------------------|------------|-----------|----------|------------|-------------|---------------------|--------------------|---------------------|
-| img_0001.jpg  | species Alcelaphus buselaphus | 0.92241    | 558       | 398      | 941        | 654         | 18/01/2013 08:58    | 0.27805552777777776| 36.87395458333334   |
-| img_0001.jpg  | family Bovidae                | 0.94621    | 1058      | 468      | 1227       | 574         | 18/01/2013 08:58    | 0.27805552777777776| 36.87395458333334   |
-| img_0002.jpg  | species Alcelaphus buselaphus | 0.97218    | 552       | 397      | 919        | 652         | 18/01/2013 08:58    | 0.27805552777777776| 36.87395458333334   |
+| relative_path | label | confidence | bbox_left | bbox_top | bbox_right | bbox_bottom | DateTimeOriginal | Latitude | Longitude |
+|---|---|---|---|---|---|---|---|---|---|
+| img_0001.jpg | species Alcelaphus buselaphus | 0.92241 | 558 | 398 | 941 | 654 | 18/01/2013 08:58 | 0.278 | 36.874 |
+| img_0001.jpg | family Bovidae | 0.94621 | 1058 | 468 | 1227 | 574 | 18/01/2013 08:58 | 0.278 | 36.874 |
+| img_0002.jpg | species Alcelaphus buselaphus | 0.97218 | 552 | 397 | 919 | 652 | 18/01/2013 08:58 | 0.278 | 36.874 |
 
 </details>
-																															
 
+## How to operate the tool
 
-# UI
+The sidebar guides you through four numbered steps:
 
-I dont really have a concrete idea of how it should look, but I believe the following should be present
-1. let the user select a representative image to do the calibration. Perhaps using https://github.com/jrieke/streamlit-image-select ?
-2. run the depth anything model (https://github.com/DepthAnything/Depth-Anything-V2) over that image and get the distance map for that image. It would be nice to have the RGB image next to the coloured distance map of that image. Perhaps something like this https://huggingface.co/spaces/depth-anything/Depth-Anything-V2 ?
+### Step 1: Select an Image
 
-![Alt text](assets/example.png)
+Pick a representative camera-trap image from the deployment. This is the image the AI will analyse for depth and that you will use to calibrate distances.
 
-3. do the actual calibration, where the user clicks on a few objects, and inputs the known distance. E.g., this tree is 3 meters away, this bush is 10 meters away, etc. How many? I don't know. We'll have to test. It would be nice to be able to click on either the RGB image or the depth map if the user perfers either one, and have calibration point show up at both images. Perhaps using https://image-coordinates.streamlit.app/dynamic_update ?
-4. calculate the distances of all the bounding boxes of the animals in the other images in that deployment, so we can add it to the results. We can do different things here, like the distance of the center of the bounding box (perhaps not useful for weirdly shaped animals that dont always have a body in the center like snakes, giraffes, etc?). Maybe best to take the center of the bottom of the bbox, so that we have the distance at the ground level. This is also error prone due to grass or other object in the way.. We'll have to give it some trial and error... We can also caluclate the hight of the animal, which will give the user some information on the age group of the animal (juvenile / adult).
+### Step 2: Generate Depth Map
 
-# Closing remarks
+Choose a model size (Small / Base / Large) and click **Generate Depth Map**. The AI model estimates how far each pixel is from the camera and produces a colour-coded depth map:
 
-This is just an initial idea! Please don't take these to strict. In my experience it always turns out different that you would expect, so please feel free to play around and try out what feels best!
+- **Purple/blue** = closer to the camera
+- **Yellow** = farther from the camera
 
+Once generated, the preview shows an interactive slider you can drag left/right to compare the original photo with the depth map.
+
+### Step 3: Calibrate Distances
+
+The depth map only gives *relative* depth (closer vs. farther), not real-world distances. To convert depth into metres you need to provide reference points -- objects in the image whose distance from the camera you know.
+
+1. **Click** on the preview image (or expand the clickable image below the slider) to mark a point.
+2. **Enter** the known distance in metres in the sidebar.
+3. Click **Add calibration point**.
+4. Repeat for at least 2 points at different distances (e.g. a tree at 5 m and a post at 15 m). More points at varied distances improve accuracy.
+
+The **Calibration Quality** section shows an accuracy score (R²). Values above 0.9 are good; below 0.8 means you should add more or better-spread reference points.
+
+Calibration points can be saved to disk and reloaded later.
+
+### Step 4: Compute Distances
+
+Click **Compute distances for all detections** to apply the calibration across every detection in the CSV. The detections table at the bottom updates with the first 10 results as a preview, and you can download the full results as a CSV.
+
+## Display options
+
+- **Show bounding boxes / sampling points** -- toggle overlays on the preview image.
+- **Sampling point position** -- choose where on each animal's bounding box to measure depth: `bottom-center` (at the animal's feet, usually best) or `center` (middle of the box).
+- **Distance unit** -- switch between metres and feet for the table and CSV export.
+- **Date format** -- choose DD/MM/YYYY, MM/DD/YYYY, or YYYY-MM-DD.
+- **Filter by label** -- show only detections matching a specific species or category.
+
+## Project structure
+
+```
+st-depth-estimation/
+├── app.py                          # Main Streamlit application
+├── requirements.txt                # Python dependencies
+├── README.md
+├── assets/
+│   └── example.png                 # Screenshot for README
+└── test-imgs/                      # Example deployment
+    ├── results_detections.csv      # Detection results with bounding boxes
+    ├── calibration_points.csv      # Saved calibration points (created at runtime)
+    └── img_0001.jpg ... img_0019.jpg
+```
+
+## Dependencies
+
+| Package | Purpose |
+|---|---|
+| `streamlit` | Web UI framework |
+| `pandas` | Data manipulation and CSV I/O |
+| `Pillow` | Image drawing (overlays, markers) |
+| `numpy` | Numerical computation (calibration fitting) |
+| `torch` | Deep learning runtime |
+| `transformers` (>=4.47.1) | HuggingFace model loading (DepthAnything V2) |
+| `streamlit-image-coordinates` | Click detection on images |
+| `streamlit-image-comparison` | Side-by-side image comparison slider |
+
+## TODO
+
+- [ ] Support user-uploaded images and CSV files instead of requiring a fixed folder
+- [ ] Compute depth maps per-image so calibration applies correctly across images with different camera positions
+- [ ] Add animal height/size estimation using bounding box dimensions and computed distance
+- [ ] Explore alternative sampling strategies for oddly-shaped animals (snakes, giraffes) where bottom-center may not be ideal
+- [ ] Add a calibration visualization (plot of reference points vs. fitted curve)
+- [ ] Batch processing progress bar for large deployments
+- [ ] Integrate into the main AddaxAI Streamlit app
